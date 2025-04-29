@@ -245,7 +245,7 @@ for (int i = 0; i < 32; i++) {
 
     if (_BinarySearch(inputHashBufferGPU, COUNT_INPUT_HASH, hash160Last8Bytes) >= 0) {
 
-      printf("possivel chave encontrada!: %s\n",localstr);
+      //printf("possivel chave encontrada!: %s\n",localstr);
 
       int idxCudaThread = IDX_CUDA_THREAD;
       outputBufferGPU[idxCudaThread] += 1;
@@ -263,7 +263,7 @@ for (int i = 0; i < 32; i++) {
     //GET_HASH_LAST_8_BYTES(hash160Last8Bytes, hash160);
 
     /*if (_BinarySearch(inputHashBufferGPU, COUNT_INPUT_HASH, hash160Last8Bytes) >= 0) {
-      printf("possivel chave encontrada2!\n");
+      //printf("possivel chave encontrada2!\n");
       int idxCudaThread = IDX_CUDA_THREAD;
       outputBufferGPU[idxCudaThread] += 1;
       for (int i = 0; i < SIZE_HASH160; i++) {
