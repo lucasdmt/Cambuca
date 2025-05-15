@@ -120,7 +120,7 @@ void salvarPosicoes(const char *strCPU, int *posicoesCPU, int *totalPosicoesCPU)
     for (int i = 0; i < *totalPosicoesCPU; i++) {
         printf("%d ", posicoesCPU[i]); 
     }
-    printf("\n");
+    printf("      ");
     printf("X nas posições na chave:");
     for (int i = 0; i < *totalPosicoesCPU; i++) {
         printf("%d ", posicoesCPU[i]+1); 
