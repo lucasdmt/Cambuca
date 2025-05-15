@@ -34,6 +34,30 @@ long getFileContent(std::string fileName, std::vector<std::string> &vecOfStrs) {
 	return totalSizeBytes;
 }
 
+bool lerChaveDeArquivo(const char* nomeArquivo, char* strCPU) {
+    std::ifstream inputFile(nomeArquivo);
+    if (!inputFile) {
+        std::cerr << "Erro ao abrir o arquivo " << nomeArquivo << std::endl;
+        return false;
+    }
+
+    std::string line;
+    if (!std::getline(inputFile, line)) {
+        std::cerr << "Erro ao ler linha do arquivo " << nomeArquivo << std::endl;
+        return false;
+    }
+
+    if (line.length() != 64) {
+        std::cerr << "Erro: a linha do arquivo deve conter exatamente 64 caracteres." << std::endl;
+        return false;
+    }
+
+    strncpy(strCPU, line.c_str(), 64);
+    strCPU[64] = '\0'; // garante término nulo
+
+    return true;
+}
+
 void loadInputHash(uint64_t *inputHashBufferCPU) {
 	std::cout << "Loading hash buffer from file: " << NAME_HASH_BUFFER << std::endl;
 
@@ -110,8 +134,11 @@ void startSecp256k1ModeBooks(uint8_t * gTableXCPU, uint8_t * gTableYCPU, uint64_
 
 	printf("Modo HEX \n");
 
-  //char strCPU[65] = "6123ae95438e22e11b4a116b4c0c3d514ecf6cfede99370cabebf4f282b4228f";
-	char strCPU[65] = "6123ae95438e22e11b4a116b4c0c3d514ecf6cfede99370caxexfxfx8xbx2x8x";
+	char strCPU[65] = {0};
+		if (!lerChaveDeArquivo("chave.txt", strCPU)) {
+    		exit(1);
+		}printf("Chave Parcial: %s    ", strCPU);
+
 	int posicoesCPU[65];
 	int totalPosicoesCPUtemp;
 
@@ -135,9 +162,6 @@ void startSecp256k1ModeBooks(uint8_t * gTableXCPU, uint8_t * gTableYCPU, uint64_
 	int itercount = COUNT_CUDA_THREADS * THREAD_MULT;
 	int maxIteration = possibilidades / itercount;
 	printf("cada iteração resulta em %d tentativas, resultando em no maximo de %d iterações \n", itercount, maxIteration);
-	std::cout << "Pressione ENTER para continuar...";
-	std::cin.get();
-
 
 	for (int iter = 0; iter < maxIteration+1; iter++) {
 		const auto clockIter1 = std::chrono::system_clock::now();
