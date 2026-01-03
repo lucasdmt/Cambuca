@@ -22,7 +22,7 @@ GPUSecp::GPUSecp(
     const uint8_t *gTableXCPU,
     const uint8_t *gTableYCPU,
     const uint64_t *inputHashBufferCPU,
-    const char* strCPU, //lucas
+    const uint8_t* privKeycpu, //lucas
     const int* posicoesCPU, //lucas
     int totalPosicoesCPUtemp  //lucas
     )
@@ -82,9 +82,9 @@ GPUSecp::GPUSecp(
   CudaSafeCall(cudaHostAlloc(&outputPrivKeysCPU, COUNT_CUDA_THREADS * SIZE_PRIV_KEY, cudaHostAllocWriteCombined | cudaHostAllocMapped));
 
   //lucas
-    printf("Allocating strCPU\n");
-    CudaSafeCall(cudaMalloc((void**)&d_strCPU, 65 * sizeof(char)));
-    CudaSafeCall(cudaMemcpy(d_strCPU, strCPU, 65 * sizeof(char), cudaMemcpyHostToDevice));
+    printf("Allocating privkeycPU\n");
+    CudaSafeCall(cudaMalloc((void**)&d_privKeyCPU, SIZE_PRIV_KEY * sizeof(uint8_t)));
+    CudaSafeCall(cudaMemcpy(d_privKeyCPU, privKeycpu, SIZE_PRIV_KEY * sizeof(uint8_t), cudaMemcpyHostToDevice));
 
     printf("Allocating posicoesCPU\n");
     CudaSafeCall(cudaMalloc((void**)&d_posicoesCPU, 65 * sizeof(int)));
@@ -104,10 +104,11 @@ GPUSecp::GPUSecp(
 //Takes 32-byte privKey + gTable and outputs 64-byte public key [qx,qy]
 __device__ void _PointMultiSecp256k1(uint64_t *qx, uint64_t *qy, uint16_t *privKey, uint8_t *gTableX, uint8_t *gTableY) {
 //6123ae95438e22e11b4a116b4c0c3d514ecf6cfede99370cabebf4f282b4228f deve resultar em 228f 82b4 f4f2 abeb 370c de99 6cfe 4ecf 3d51 4c0c 116b 1b4a 22e1 438e ae95 6123
-/*for (int i = 0; i < 16; i++) {
+/*printf("funcfinal: ");
+for (int i = 0; i < 16; i++) {
     printf("%04x ", privKey[i]);  // %04x = 4 dígitos hex, preenchidos com zero à esquerda
 }
-printf("\n");*/ 
+printf("\n");*/
     int chunk = 0;
     uint64_t qz[5] = {1, 0, 0, 0, 0};
 
@@ -156,11 +157,12 @@ CudaRunSecp256k1Books(
     uint8_t *outputBufferGPU,
     uint8_t *outputHashesGPU,
     uint8_t *outputPrivKeysGPU,
-    const char* str,          //lucas
+    const uint8_t* privKey,          //lucas
     const int* posicoes,      //lucas
     int totalPosicoes    //lucas
 ){
-  uint8_t privKey[SIZE_PRIV_KEY];
+  uint8_t privKeyLocal[32];
+  memcpy(privKeyLocal, privKey, 32);
 
   int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
   //long long result2 = iteration * COUNT_CUDA_THREADS * THREAD_MULT;
@@ -173,13 +175,12 @@ CudaRunSecp256k1Books(
 
   //printf("thread_id %d\n", thread_id);
 
+  
   for (int j = start; j < end; ++j){
     result=result2+j;
     
-
     int indicesCharset[65] = {0};  // Array inicializado com zeros
     int base = 16;
-
 
     /*if(result == 4294967295){
       printf("ultimoooo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
@@ -195,15 +196,29 @@ CudaRunSecp256k1Books(
     }
 
 
-    char localstr[65];
-    memcpy(localstr, str, 65);  // Copia o template
+    uint8_t savedBytes[32];
+    for (int p = 0; p < totalPosicoes; ++p) {
+        int pos = posicoes[p];            // pos: 0..63 (na string hex da esquerda pra direita)
+        int byteIdx = 31 - (pos >> 1);    // <--- MAPEAMENTO CORRIGIDO (little-endian)
+        bool isHigh = ((pos & 1) == 0);   // par -> high nibble
 
-    for (int i = 0; i < totalPosicoes; i++) {
-       localstr[posicoes[i]] = CHARSET_GPU[indicesCharset[i]];
-    } 
+        savedBytes[p] = privKeyLocal[byteIdx];
 
+        uint8_t nib = (uint8_t)(indicesCharset[p] & 0x0F);
+        if (isHigh) {
+            privKeyLocal[byteIdx] = (privKeyLocal[byteIdx] & 0x0F) | (nib << 4);
+        } else {
+            privKeyLocal[byteIdx] = (privKeyLocal[byteIdx] & 0xF0) | nib;
+        }
+    }
 
+  /*printf("privkey cpu hex: ");
+  for (int i = 0; i < 32; ++i) {
+      // cast para unsigned para evitar problemas com promotions
+      printf("%02X", (unsigned)privKeyLocal[i]);
+  }printf("\n");*/
 
+/*
 // Converte a string hex para uint8_t[32] em little-endian
 for (int i = 0; i < 32; i++) {
     // Lê os caracteres hex *do fim para o início* (inverte a ordem dos bytes)
@@ -218,12 +233,23 @@ for (int i = 0; i < 32; i++) {
                        (lowChar >= 'a' && lowChar <= 'f') ? lowChar - 'a' + 10 : 0;
 
     privKey[i] = (highNibble << 4) | lowNibble;
+}*/
+
+
+ /* printf("antes da func: ");
+for (int i = 0; i < 32; ++i) {
+    // cast para unsigned para evitar problemas com promotions
+    printf("%02X ", (unsigned)privKey[i]);
 }
+  printf("\n");*/
+
 
     uint64_t qx[4];
     uint64_t qy[4];
 
-    _PointMultiSecp256k1(qx, qy, (uint16_t *)privKey, gTableXGPU, gTableYGPU);
+                       //printf("mod    %s\n",localstr); //str localstr para modificada
+
+    _PointMultiSecp256k1(qx, qy, (uint16_t *)privKeyLocal, gTableXGPU, gTableYGPU);
 
     uint8_t hash160[SIZE_HASH160];
     uint64_t hash160Last8Bytes;
@@ -245,7 +271,7 @@ for (int i = 0; i < 32; i++) {
 
     if (_BinarySearch(inputHashBufferGPU, COUNT_INPUT_HASH, hash160Last8Bytes) >= 0) {
 
-      printf("possivel chave encontrada!: %s\n",localstr);
+      //printf("possivel chave encontrada!: %s\n",localstr);
 
       int idxCudaThread = IDX_CUDA_THREAD;
       outputBufferGPU[idxCudaThread] += 1;
@@ -274,6 +300,10 @@ for (int i = 0; i < 32; i++) {
       }
     }*/
   }
+
+
+
+
 }
 
 
@@ -291,7 +321,7 @@ void GPUSecp::doIterationSecp256k1Books(int iteration) {
     outputBufferGPU,
     outputHashesGPU,
     outputPrivKeysGPU,
-    d_strCPU,              //lucas
+    d_privKeyCPU,              //lucas
     d_posicoesCPU,         //lucas
     d_totalPosicoesCPUtemp //lucas
     );
@@ -350,7 +380,7 @@ void GPUSecp::doFreeMemory() {
   CudaSafeCall(cudaFreeHost(outputPrivKeysCPU));
   CudaSafeCall(cudaFree(outputPrivKeysGPU));
 
-  CudaSafeCall(cudaFree(d_strCPU)); //lucas
+  CudaSafeCall(cudaFree(d_privKeyCPU)); //lucas
   CudaSafeCall(cudaFree(d_posicoesCPU)); //lucas
 
   printf("Acabou \n");

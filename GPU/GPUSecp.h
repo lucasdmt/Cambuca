@@ -75,7 +75,7 @@ public:
 		const uint8_t * gTableXCPU,
 		const uint8_t * gTableYCPU,
 		const uint64_t * inputHashBufferCPU,
-		const char* strCPU,          //lucas		
+		const uint8_t * privKeycpu,          //lucas		
     const int* posicoesCPU,      //lucas
     int totalPosicoesCPUtemp     //lucas
 		);
@@ -86,7 +86,7 @@ public:
 
 private:
 
-	char* d_strCPU;								//lucas
+	uint8_t* d_privKeyCPU;								//lucas
   int* d_posicoesCPU;						//lucas
   int d_totalPosicoesCPUtemp;		//lucas
 

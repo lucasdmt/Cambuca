@@ -34,7 +34,7 @@ long getFileContent(std::string fileName, std::vector<std::string> &vecOfStrs) {
 	return totalSizeBytes;
 }
 
-bool lerChaveDeArquivo(const char* nomeArquivo, char* strCPU) {
+bool lerChaveDeArquivo(const char* nomeArquivo, char* strCPU, uint8_t* privKeycpu) {
     std::ifstream inputFile(nomeArquivo);
     if (!inputFile) {
         std::cerr << "Erro ao abrir o arquivo " << nomeArquivo << std::endl;
@@ -54,7 +54,22 @@ bool lerChaveDeArquivo(const char* nomeArquivo, char* strCPU) {
 
     strncpy(strCPU, line.c_str(), 64);
     strCPU[64] = '\0'; // garante término nulo
+    
+    // Converte a string hex para uint8_t[32] em little-endian
+	for (int i = 0; i < 32; i++) {
+    	// Lê os caracteres hex *do fim para o início* (inverte a ordem dos bytes)
+    	int posChar = (31 - i) * 2;  // Começa do último par de caracteres
+    	char highChar = strCPU[posChar];
+    	char lowChar = strCPU[posChar + 1];
 
+    	// Converte para nibbles e combina em um byte
+    	uint8_t highNibble = (highChar >= '0' && highChar <= '9') ? highChar - '0' :
+                        (highChar >= 'a' && highChar <= 'f') ? highChar - 'a' + 10 : 0;
+    	uint8_t lowNibble = (lowChar >= '0' && lowChar <= '9') ? lowChar - '0' :
+                       (lowChar >= 'a' && lowChar <= 'f') ? lowChar - 'a' + 10 : 0;
+
+    	privKeycpu[i] = (highNibble << 4) | lowNibble;
+	}
     return true;
 }
 
@@ -135,9 +150,18 @@ void startSecp256k1ModeBooks(uint8_t * gTableXCPU, uint8_t * gTableYCPU, uint64_
 	printf("Modo HEX \n");
 
 	char strCPU[65] = {0};
-		if (!lerChaveDeArquivo("chave.txt", strCPU)) {
+	uint8_t privKeycpu[SIZE_PRIV_KEY];
+		if (!lerChaveDeArquivo("chave.txt", strCPU, privKeycpu)) {
     		exit(1);
-		}printf("Chave Parcial: %s    ", strCPU);
+		}printf("Chave Parcial char: %s    \n", strCPU);
+
+
+
+	printf("privkey cpu hex: ");
+	for (int i = 0; i < 32; ++i) {
+    	// cast para unsigned para evitar problemas com promotions
+    	printf("%02X", (unsigned)privKeycpu[i]);
+	}printf("\n");
 
 	int posicoesCPU[65];
 	int totalPosicoesCPUtemp;
@@ -148,7 +172,7 @@ void startSecp256k1ModeBooks(uint8_t * gTableXCPU, uint8_t * gTableYCPU, uint64_
 		gTableXCPU,
 		gTableYCPU,
 		inputHashBufferCPU,
-		strCPU,              
+		privKeycpu,              
     	posicoesCPU,         
     	totalPosicoesCPUtemp
 	);
@@ -175,7 +199,7 @@ void startSecp256k1ModeBooks(uint8_t * gTableXCPU, uint8_t * gTableYCPU, uint64_
 		timeTotal += iterationDuration;
 
 		totalCount = (itercount * (iter+1));
-		//printf("Cambuca Iteration: %d, time: %ld \n", iter, iterationDuration);
+		printf("Cambuca Iteration: %d, time: %ld \r", iter, iterationDuration);
 
 		int restantes = maxIteration - iter;
 		long etaMillis = iterationDuration * restantes;
