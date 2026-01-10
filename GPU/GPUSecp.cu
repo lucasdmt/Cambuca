@@ -144,9 +144,6 @@ printf("\n");*/
     _ModMult(qy, qz);
 }
 
-__constant__ char CHARSET_GPU[17] = "0123456789abcdef";
-
-
 //GPU kernel function for computing Secp256k1 public key from input books
 __global__ void
 CudaRunSecp256k1Books(
@@ -179,15 +176,8 @@ CudaRunSecp256k1Books(
   for (int j = start; j < end; ++j){
     result=result2+j;
     
-    int indicesCharset[65] = {0};  // Array inicializado com zeros
+    int indicesCharset[MAX_POSICOES] = {0};  // Array inicializado com zeros
     int base = 16;
-
-    /*if(result == 4294967295){
-      printf("ultimoooo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-    }*/
-
-    //long long resulttemp = result;
-
 
     // Preenchendo o array de trás para frente
     for (int i = totalPosicoes -1 ; i >= 0; i--) {
@@ -196,13 +186,11 @@ CudaRunSecp256k1Books(
     }
 
 
-    uint8_t savedBytes[32];
     for (int p = 0; p < totalPosicoes; ++p) {
         int pos = posicoes[p];            // pos: 0..63 (na string hex da esquerda pra direita)
         int byteIdx = 31 - (pos >> 1);    // <--- MAPEAMENTO CORRIGIDO (little-endian)
         bool isHigh = ((pos & 1) == 0);   // par -> high nibble
 
-        savedBytes[p] = privKeyLocal[byteIdx];
 
         uint8_t nib = (uint8_t)(indicesCharset[p] & 0x0F);
         if (isHigh) {
@@ -211,43 +199,8 @@ CudaRunSecp256k1Books(
             privKeyLocal[byteIdx] = (privKeyLocal[byteIdx] & 0xF0) | nib;
         }
     }
-
-  /*printf("privkey cpu hex: ");
-  for (int i = 0; i < 32; ++i) {
-      // cast para unsigned para evitar problemas com promotions
-      printf("%02X", (unsigned)privKeyLocal[i]);
-  }printf("\n");*/
-
-/*
-// Converte a string hex para uint8_t[32] em little-endian
-for (int i = 0; i < 32; i++) {
-    // Lê os caracteres hex *do fim para o início* (inverte a ordem dos bytes)
-    int posChar = (31 - i) * 2;  // Começa do último par de caracteres
-    char highChar = localstr[posChar];
-    char lowChar = localstr[posChar + 1];
-
-    // Converte para nibbles e combina em um byte
-    uint8_t highNibble = (highChar >= '0' && highChar <= '9') ? highChar - '0' :
-                        (highChar >= 'a' && highChar <= 'f') ? highChar - 'a' + 10 : 0;
-    uint8_t lowNibble = (lowChar >= '0' && lowChar <= '9') ? lowChar - '0' :
-                       (lowChar >= 'a' && lowChar <= 'f') ? lowChar - 'a' + 10 : 0;
-
-    privKey[i] = (highNibble << 4) | lowNibble;
-}*/
-
-
- /* printf("antes da func: ");
-for (int i = 0; i < 32; ++i) {
-    // cast para unsigned para evitar problemas com promotions
-    printf("%02X ", (unsigned)privKey[i]);
-}
-  printf("\n");*/
-
-
     uint64_t qx[4];
     uint64_t qy[4];
-
-                       //printf("mod    %s\n",localstr); //str localstr para modificada
 
     _PointMultiSecp256k1(qx, qy, (uint16_t *)privKeyLocal, gTableXGPU, gTableYGPU);
 
@@ -255,20 +208,7 @@ for (int i = 0; i < 32; ++i) {
     uint64_t hash160Last8Bytes;
 
     _GetHash160Comp(qx, (uint8_t)(qy[0] & 1), hash160);
-
     GET_HASH_LAST_8_BYTES(hash160Last8Bytes, hash160);
-
-
-    /*if(resulttemp == 15){
-       printf("mod    %s\n",localstr); //str localstr para modificada
-        printf("hash160comp: ");
-       for (int i = 0; i < SIZE_HASH160; i++) {
-        // Imprime cada byte como hexadecimal
-        printf("%02x", hash160[i]);
-       }printf("\n");
-    }*/
-
-
     if (_BinarySearch(inputHashBufferGPU, COUNT_INPUT_HASH, hash160Last8Bytes) >= 0) {
 
       //printf("possivel chave encontrada!: %s\n",localstr);
@@ -279,16 +219,15 @@ for (int i = 0; i < 32; ++i) {
         outputHashesGPU[(idxCudaThread * SIZE_HASH160) + i] = hash160[i];
       }
       for (int i = 0; i < SIZE_PRIV_KEY; i++) {
-        outputPrivKeysGPU[(idxCudaThread * SIZE_PRIV_KEY) + i] = privKey[i];
+        outputPrivKeysGPU[(idxCudaThread * SIZE_PRIV_KEY) + i] = privKeyLocal[i];
       }
     }
 
-
-    
-    //_GetHash160(qx, qy, hash160);
-    //GET_HASH_LAST_8_BYTES(hash160Last8Bytes, hash160);
-
-    /*if (_BinarySearch(inputHashBufferGPU, COUNT_INPUT_HASH, hash160Last8Bytes) >= 0) {
+    //for no compress key
+    /*
+    _GetHash160(qx, qy, hash160);
+    GET_HASH_LAST_8_BYTES(hash160Last8Bytes, hash160);
+    if (_BinarySearch(inputHashBufferGPU, COUNT_INPUT_HASH, hash160Last8Bytes) >= 0) {
       printf("possivel chave encontrada2!\n");
       int idxCudaThread = IDX_CUDA_THREAD;
       outputBufferGPU[idxCudaThread] += 1;

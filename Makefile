@@ -1,5 +1,5 @@
 
-SRC = CudaBrainSecp.cpp \
+SRC = CambucaSecp.cpp \
       CPU/Point.cpp \
       CPU/Int.cpp \
       CPU/IntMod.cpp \
@@ -13,7 +13,7 @@ OBJET = $(addprefix $(OBJDIR)/, \
 		CPU/Int.o \
 		CPU/IntMod.o \
 		CPU/SECP256K1.o \
-        CudaBrainSecp.o \
+        CambucaSecp.o \
 )
 
 CCAP      = 75

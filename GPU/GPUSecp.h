@@ -9,14 +9,14 @@
 
 #define NAME_HASH_FOLDER "Hash160"
 #define NAME_HASH_BUFFER "merged-sorted-unique-8-byte-hashes"
-#define NAME_FILE_OUTPUT "happynation"
+#define NAME_FILE_OUTPUT "keyfound"
 
 //CUDA-specific parameters that determine occupancy and thread-count
 //Please read more about them in CUDA docs and adjust according to your GPU specs
 #define BLOCKS_PER_GRID 20   //20
 #define THREADS_PER_BLOCK 256 //256
 #define THREAD_MULT 100 //100 quantas seed cada thread vai calcular até terminar a iteração 
-
+#define MAX_POSICOES 15 //numero maximo de X a buscar
 
 //This is how many hashes are in NAME_HASH_FOLDER, Defined as constant to save one register in device kernel
 #define COUNT_INPUT_HASH 1
