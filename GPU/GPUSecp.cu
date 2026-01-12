@@ -168,46 +168,59 @@ CudaRunSecp256k1Books(
 
   int start = thread_id * THREAD_MULT;
   int end = start + THREAD_MULT;
-  long long result;
 
   //printf("thread_id %d\n", thread_id);
 
   
   for (int j = start; j < end; ++j){
-    result=result2+j;
-    
-    int indicesCharset[MAX_POSICOES] = {0};  // Array inicializado com zeros
-    int base = 16;
+     long long v = result2 + j;
+     /*if (threadIdx.x == 4) {
+        printf("[block %d] v=%lld ", blockIdx.x, v);
+     }*/
 
-    // Preenchendo o array de trás para frente
-    for (int i = totalPosicoes -1 ; i >= 0; i--) {
-        indicesCharset[i] = result % base;  // Obtém o dígito menos significativo
-        result /= base;  // Divide pelo valor da base para obter o próximo dígito
-    }
+     for (int p = totalPosicoes - 1; p >= 0; --p) {
+        uint8_t nib = v & 0xF;   // pega 1 hex digit
+        v >>= 4;
+
+        int pos = posicoes[p];
+        int byteIdx = 31 - (pos >> 1);
+        bool isHigh = ((pos & 1) == 0);
+
+        if (isHigh)
+           privKeyLocal[byteIdx] = (privKeyLocal[byteIdx] & 0x0F) | (nib << 4);
+        else
+           privKeyLocal[byteIdx] = (privKeyLocal[byteIdx] & 0xF0) | nib;
+     }
 
 
-    for (int p = 0; p < totalPosicoes; ++p) {
-        int pos = posicoes[p];            // pos: 0..63 (na string hex da esquerda pra direita)
-        int byteIdx = 31 - (pos >> 1);    // <--- MAPEAMENTO CORRIGIDO (little-endian)
-        bool isHigh = ((pos & 1) == 0);   // par -> high nibble
+
+      /*if (threadIdx.x == 4) {
+         printf("privKeyLocal: ");
+         for (int i = 31; i >= 0; i--) {
+            printf("%02X", privKeyLocal[i]);
+         }
+      printf("\n");
+      }*/
 
 
-        uint8_t nib = (uint8_t)(indicesCharset[p] & 0x0F);
-        if (isHigh) {
-            privKeyLocal[byteIdx] = (privKeyLocal[byteIdx] & 0x0F) | (nib << 4);
-        } else {
-            privKeyLocal[byteIdx] = (privKeyLocal[byteIdx] & 0xF0) | nib;
-        }
-    }
+
+
+
     uint64_t qx[4];
     uint64_t qy[4];
 
     _PointMultiSecp256k1(qx, qy, (uint16_t *)privKeyLocal, gTableXGPU, gTableYGPU);
 
     uint8_t hash160[SIZE_HASH160];
-    uint64_t hash160Last8Bytes;
-
+    
     _GetHash160Comp(qx, (uint8_t)(qy[0] & 1), hash160);
+
+        printf("hash160: ");
+    for (int i = 0; i < 20; i++) {
+        printf("%02x", hash160[i]);
+    }
+
+    uint64_t hash160Last8Bytes;
     GET_HASH_LAST_8_BYTES(hash160Last8Bytes, hash160);
     if (_BinarySearch(inputHashBufferGPU, COUNT_INPUT_HASH, hash160Last8Bytes) >= 0) {
 
