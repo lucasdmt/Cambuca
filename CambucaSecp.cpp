@@ -199,7 +199,7 @@ void startSecp256k1ModeBooks(uint8_t * gTableXCPU, uint8_t * gTableYCPU, uint64_
 		timeTotal += iterationDuration;
 
 		totalCount = (itercount * (iter+1));
-		printf("Cambuca Iteration: %d, time: %ld \r", iter, iterationDuration);
+		//printf("Cambuca Iteration: %d, time: %ld \r", iter, iterationDuration);
 
 		int restantes = maxIteration - iter;
 		long etaMillis = iterationDuration * restantes;
