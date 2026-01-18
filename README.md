@@ -7,7 +7,7 @@ Performs Secp256k1 Point Multiplication directly on GPU. <br/>
 ## :heavy_check_mark: When to use CambucaHEX
 CambucaHEX is designed for **private key recovery when hexadecimal characters are missing and scattered across the key**, rather than lost in a continuous or sequential range.  
 It is especially useful in scenarios where partial keys were corrupted, manually copied, or truncated at random positions.
-Example:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4:x:5:x:9:x:b:x:8:x:2:x:8:x:5    :x:= corrupted or missing.
+Example:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4❌5❌9❌b❌8❌2❌8❌5    :x:= corrupted or missing.
 
 ## :x: When NOT to use CambucaHEX
 - If the missing characters are **sequential or form a continuous range**, other specialized tools may be more efficient. CambucaHEX should be avoided **when it's possible to derive private keys from each-other.** <br> In such cases CambucaHEX is sub-optimal as it would be much quicker to re-use already calculated public keys.<br>
