@@ -1,9 +1,8 @@
 ## This is not my project!! FORK FROM https://github.com/kpurens  
 
-# :brain: CudaBrainSecp
-Cuda Secp256k1 Brain Wallet Recovery Tool. <br/>
+# :brain: CambucaHEX
+Cuda Secp256k1 HEX Private Key Recovery Tool. <br/>
 Performs Secp256k1 Point Multiplication directly on GPU. <br/>
-Can be used for efficient brain-wallet or mnemonic-phrase recovery. <br/>
 
 ## :notebook_with_decorative_cover: Design
 System design can be illustrated with data-flow diagram:
