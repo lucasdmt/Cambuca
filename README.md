@@ -1,6 +1,6 @@
-## This is not my project!! FORK FROM https://github.com/kpurens  
+## This is not my project!! FORK FROM https://github.com/kpurens Read the license file.
 
-# :brain: CambucaHEX
+# :unlock: CambucaHEX
 Cuda Secp256k1 HEX Private Key Recovery Tool. <br/>
 Performs Secp256k1 Point Multiplication directly on GPU. <br/>
 
@@ -8,23 +8,19 @@ Performs Secp256k1 Point Multiplication directly on GPU. <br/>
 System design can be illustrated with data-flow diagram:
 ![DiagramV12](https://user-images.githubusercontent.com/8969128/185214693-8632ee9b-b748-4cd5-bf43-77434ea62284.png)
 
-## :heavy_check_mark: When to use CudaBrainSecp
-CudaBrainSecp is most useful **when private keys can not be derived from each-other.**<br>
-In the example diagram an extra calculation **Sha256 Transform** is done before Secp256k1.<br>
-This calculation makes it (nearly) impossible to guess the previous or the next private key.<br>
-In such cases CudaBrainSecp is very useful as it performs full Point Multiplication on each thread.<br>
-This includes:
-- Brain Wallets
-- Seed Phrases
-- Mnemonic Phrases / [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
+## :heavy_check_mark: When to use CambucaHEX
+CambucaHEX is designed for **private key recovery when hexadecimal characters are missing and scattered across the key**, rather than lost in a continuous or sequential range.  
+It is especially useful in scenarios where partial keys were corrupted, manually copied, or truncated at random positions.
 
 ## :x: When NOT to use CudaBrainSecp
 CudaBrainSecp should be avoided **when it's possible to derive private keys from each-other.** <br>
 In such cases CudaBrainSecp is sub-optimal as it would be much quicker to re-use already calculated public keys.<br>
 This includes:
 - Bitcoin Puzzle (Where you have to simply increment the private key very quickly)<br>
-- WIF Recovery (Wallet-Import-Format **is not hashed** and the private key can be re-used / incremented)<br>
-- Non-hashed seeds (Each public key can be calculated with just one point-addition from previous public key)<br>
+- WIF Recovery (Wallet-Import-Format **is not hashed** and the private key can be re-used / incremented) Wait for CambucaWIF hahhahah<br>
+- If the missing characters are **sequential or form a continuous range**, other specialized tools may be more efficient.  
+
+CambucaHEX is most useful **when private keys can not be derived from each other**, as it does **not rely on incremental or sequential key relationships**, Instead, CambucaHEX performs **full elliptic curve point multiplication on each thread**, ensuring correctness even when no mathematical shortcuts are possible.
 
 ## :spiral_notepad: Requirements
 - Linux Operating System
@@ -38,8 +34,7 @@ This includes:
 3. Edit Makefile **CCAP** value to your Compute Capability (as an Integer, without decimal places!)
 4. Edit Makefile **CUDA** value to your Nvidia Cuda Toolkit directory
 5. Open terminal and run `make all` to generate the binaries (don't need administrator privileges)
-6. Run `./CudaBrainSecp` to launch the test cases (execution should take about ~3 seconds)
-7. You should see output with 112 iterations and ~50 succesfully found hashes + private keys<br /><br />
+6. Run `./Cambuca` to launch the test cases (execution should take about ~3 seconds)
 If you see an error message `system has unsupported display driver / cuda driver combination` or `forward compatibility was attempted on non supporte HW` that means your cuda toolkit is incompatible with your display driver. (can try installing another display driver or another cuda toolkit version + restarting your PC).
 
 ## :gear: Configuration
@@ -51,35 +46,6 @@ All other configuration is done through `GPU/GPUSecp.h` file.<br />
 It contains comments / info about each configurable value, so it should be relatively simple.<br />
 You will need to adjust `BLOCKS_PER_GRID` and `THREADS_PER_BLOCK` based on your GPU architecture.<br />
 After editing this file you will need to rebuild the project with `make clean` and `make all`<br />
-
-## :books: Modes
-CudaBrainSecp includes two operation modes:<br />
-- ModeBooks
-- ModeCombo
-
-**ModeBooks** <br />
-This is the default mode - called from `startSecp256k1ModeBooks` function.<br />
-It loads two input wordlists and combines them inside the GPU-kernel.<br />
-Current implementation is designed around small Prime wordlist and large Affix wordlist.<br />
-In single iteration each thread takes one Affix word and multiplies it with all Prime words.<br />
-Prime wordlist is very small because it allows [GPU Global Memory Coalescing](https://developer.nvidia.com/blog/how-access-global-memory-efficiently-cuda-c-kernels/)<br />
-Optionally you can change `AFFIX_IS_SUFFIX` to false - this will add Affix words as prefix to Prime words.<br />
-File `hash160_book_btc` includes exactly 100 hashes that should be found by combining given wordlists.<br />
-Around half of these hashes should be found when affix is prefix, other half when affix is suffix.<br />
-You can verify found test hashes using `original_addr` and `original_seed` files.<br />
-
-**ModeCombo** <br />
-This is an optional mode - can be enabled by calling `startSecp256k1ModeCombo` method.<br />
-It functions as Combination lock / cypher - by doing all possible permutations of given symbols.<br />
-Every iteration each thread loads the starting state (`inputComboGPU`) by using the thread index.<br />
-And then fully iterates `combo[0]` and `combo[1]` symbols - calculating N<sup>2</sup> public keys, where N = `COUNT_COMBO_SYMBOLS`.<br />
-Three configuration parameters for this mode are:
-- `COUNT_COMBO_SYMBOLS` - how many unique symbols exist in the `COMBO_SYMBOLS` buffer
-- `SIZE_COMBO_MULTI` -  how many times symbols will be multiplied with each-other
-- `COMBO_SYMBOLS` - the constant buffer containing combination ASCII symbols / bytes<br />
-
-Currently maximum multiplication count is 8 - additional code needs to be added for larger combinations.<br />
-Test Hash160 files include 20 hashes that should be found for each combo multiplication count (4,5,6,7,8).<br />
 
 ## :rocket: Real Launch
 Once you are satisfied with the test cases / performance, you can setup the data for real-world launch:
