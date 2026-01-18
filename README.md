@@ -12,7 +12,7 @@ System design can be illustrated with data-flow diagram:
 CambucaHEX is designed for **private key recovery when hexadecimal characters are missing and scattered across the key**, rather than lost in a continuous or sequential range.  
 It is especially useful in scenarios where partial keys were corrupted, manually copied, or truncated at random positions.
 
-## :x: When NOT to use CudaBrainSecp
+## :x: When NOT to use CambucaHEX
 CudaBrainSecp should be avoided **when it's possible to derive private keys from each-other.** <br>
 In such cases CudaBrainSecp is sub-optimal as it would be much quicker to re-use already calculated public keys.<br>
 This includes:
