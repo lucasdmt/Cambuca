@@ -215,10 +215,10 @@ CudaRunSecp256k1Books(
     
     _GetHash160Comp(qx, (uint8_t)(qy[0] & 1), hash160);
 
-        printf("hash160: ");
+    /*    printf("hash160: ");
     for (int i = 0; i < 20; i++) {
         printf("%02x", hash160[i]);
-    }
+    }*/
 
     uint64_t hash160Last8Bytes;
     GET_HASH_LAST_8_BYTES(hash160Last8Bytes, hash160);
