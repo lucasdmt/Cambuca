@@ -1,21 +1,20 @@
-## This is not my project!! FORK FROM https://github.com/kpurens Read the license file.
+## This is not my project!! FORK FROM https://github.com/kpurens Read license file.
 
 # :unlock: CambucaHEX
 Cuda Secp256k1 HEX Private Key Recovery Tool. <br/>
 Performs Secp256k1 Point Multiplication directly on GPU. <br/>
 
-## :notebook_with_decorative_cover: Design
-System design can be illustrated with data-flow diagram:
-![diagrama](https://github.com/user-attachments/assets/4e3d7bb7-854b-4a86-813e-883f7b17014c)
-
 ## :heavy_check_mark: When to use CambucaHEX
 CambucaHEX is designed for **private key recovery when hexadecimal characters are missing and scattered across the key**, rather than lost in a continuous or sequential range.  
 It is especially useful in scenarios where partial keys were corrupted, manually copied, or truncated at random positions.
-
 ## :x: When NOT to use CambucaHEX
 - If the missing characters are **sequential or form a continuous range**, other specialized tools may be more efficient. CambucaHEX should be avoided **when it's possible to derive private keys from each-other.** <br> In such cases CambucaHEX is sub-optimal as it would be much quicker to re-use already calculated public keys.<br>
 - Bitcoin Puzzle (Where you have to simply increment the private key very quickly)<br>
 - WIF Recovery,Wait for CambucaWIF hahhahah<br>
+
+## :notebook_with_decorative_cover: Design
+System design can be illustrated with data-flow diagram:
+![diagrama](https://github.com/user-attachments/assets/4e3d7bb7-854b-4a86-813e-883f7b17014c)
 
 ## :spiral_notepad: Requirements
 - Linux Operating System
