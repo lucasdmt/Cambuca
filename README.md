@@ -6,7 +6,7 @@ Performs Secp256k1 Point Multiplication directly on GPU. <br/>
 
 ## :notebook_with_decorative_cover: Design
 System design can be illustrated with data-flow diagram:
-![DiagramV12](https://user-images.githubusercontent.com/8969128/185214693-8632ee9b-b748-4cd5-bf43-77434ea62284.png)
+![diagrama](https://github.com/user-attachments/assets/4e3d7bb7-854b-4a86-813e-883f7b17014c)
 
 ## :heavy_check_mark: When to use CambucaHEX
 CambucaHEX is designed for **private key recovery when hexadecimal characters are missing and scattered across the key**, rather than lost in a continuous or sequential range.  
