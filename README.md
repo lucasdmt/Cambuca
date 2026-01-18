@@ -13,14 +13,9 @@ CambucaHEX is designed for **private key recovery when hexadecimal characters ar
 It is especially useful in scenarios where partial keys were corrupted, manually copied, or truncated at random positions.
 
 ## :x: When NOT to use CambucaHEX
-CudaBrainSecp should be avoided **when it's possible to derive private keys from each-other.** <br>
-In such cases CudaBrainSecp is sub-optimal as it would be much quicker to re-use already calculated public keys.<br>
-This includes:
+- If the missing characters are **sequential or form a continuous range**, other specialized tools may be more efficient. CambucaHEX should be avoided **when it's possible to derive private keys from each-other.** <br> In such cases CambucaHEX is sub-optimal as it would be much quicker to re-use already calculated public keys.<br>
 - Bitcoin Puzzle (Where you have to simply increment the private key very quickly)<br>
-- WIF Recovery (Wallet-Import-Format **is not hashed** and the private key can be re-used / incremented) Wait for CambucaWIF hahhahah<br>
-- If the missing characters are **sequential or form a continuous range**, other specialized tools may be more efficient.  
-
-CambucaHEX is most useful **when private keys can not be derived from each other**, as it does **not rely on incremental or sequential key relationships**, Instead, CambucaHEX performs **full elliptic curve point multiplication on each thread**, ensuring correctness even when no mathematical shortcuts are possible.
+- WIF Recovery,Wait for CambucaWIF hahhahah<br>
 
 ## :spiral_notepad: Requirements
 - Linux Operating System
